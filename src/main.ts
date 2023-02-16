@@ -14,4 +14,4 @@ app.use(createPinia());
 app.use(router);
 app.use(createI18n({ locale: "en", messages }));
 
-app.mount("#app");
+router.isReady().then(() => app.mount("#app"));
