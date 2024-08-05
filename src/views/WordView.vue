@@ -1,24 +1,35 @@
 <script setup lang="ts">
 import type { GroupedWordDefinitions, WordDTO } from "@/@types";
 import WordDetails from "@/components/word/WordDetails.vue";
+import { RouteNames } from "@/router/routes";
 import WordsService from "@/services/WordsService";
-import { watchEffect } from "vue";
+import { ref, watchEffect } from "vue";
 import { useRoute } from "vue-router";
-import { $ref } from "vue/macros";
 
 const route = useRoute();
-let groupedData = $ref<GroupedWordDefinitions>();
-let data = $ref<WordDTO>();
+const groupedData = ref<GroupedWordDefinitions>();
+const data = ref<WordDTO>();
+const rhymes = ref<string[]>();
 
 function getWordData(word: string) {
-  groupedData = undefined;
-  data = undefined;
+  groupedData.value = undefined;
+  data.value = undefined;
+  rhymes.value = undefined;
+
   WordsService.definition(word).then((response) => {
-    data = response.data;
-    groupedData = response.data.results.reduce(
-      (r, v, i, a, k = v.partOfSpeech) => ((r[k] || (r[k] = [])).push(v), r),
-      {} as GroupedWordDefinitions,
-    );
+    data.value = response.data;
+    groupedData.value = response.data.results.reduce((accumulator: GroupedWordDefinitions, word) => {
+      const partOfSpeech = word.partOfSpeech;
+      if (!accumulator[partOfSpeech]) {
+        accumulator[partOfSpeech] = [];
+      }
+      accumulator[partOfSpeech].push(word);
+      return accumulator;
+    }, {});
+  });
+
+  WordsService.rhymes(word).then((response) => {
+    rhymes.value = response.data.rhymes.all;
   });
 }
 
@@ -33,7 +44,7 @@ watchEffect(() => {
       <h1 class="text-8xl font-bold capitalize">{{ route.params.word }}</h1>
       <button class="flex items-center gap-3 rounded-full border-2 border-neutral-700 px-20 py-3">
         <figure class="rounded-full px-2 dark:bg-neutral-100 dark:text-black">⏵</figure>
-        <span class="font-sans">/{{ data.pronunciation?.all }}/</span>
+        <span class="whitespace-nowrap font-sans">/{{ data.pronunciation?.all }}/</span>
       </button>
     </header>
 
@@ -57,7 +68,16 @@ watchEffect(() => {
           </div>
         </div>
       </div>
-      <aside class="w-4/12 border-b-2 border-neutral-800 pb-6 pt-12">watch this space</aside>
+      <aside class="flex w-4/12 flex-col gap-6 border-b-2 border-l-2 border-neutral-800 px-6 py-12">
+        <h6 class="text-2xl">Rhymes</h6>
+        <ul class="flex flex-col gap-2">
+          <li v-for="rhyme in rhymes" :key="rhyme">
+            <RouterLink :to="{ name: RouteNames.Word, params: { word: rhyme } }" class="dark:text-yellow-400">
+              {{ rhyme }}
+            </RouterLink>
+          </li>
+        </ul>
+      </aside>
     </main>
   </div>
 </template>

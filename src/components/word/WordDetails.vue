@@ -13,14 +13,14 @@ const props = defineProps<{
 
 <template>
   <div class="flex">
-    <article class="flex w-full flex-col border-r-2 border-b-2 border-neutral-800 p-6 pt-12">
+    <article class="flex w-full flex-col border-b-2 border-neutral-800 p-6 pt-12">
       <p class="mb-4 text-2xl">
-        <span v-if="props.isFirst">{{ props.index }}.</span>
-        <span v-else class="text-5xl">⋅</span>
         {{ props.definition }}
       </p>
 
-      <p v-if="props.examples" class="dark:text-neutral-500">"{{ props.examples[0] }}"</p>
+      <template v-if="props.examples">
+        <p v-for="(example, i) in props.examples" :key="i" class="dark:text-neutral-500">"{{ example }}"</p>
+      </template>
 
       <div v-if="props.synonyms" class="mt-8 flex gap-12">
         <span>synonyms</span>

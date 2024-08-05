@@ -31,3 +31,8 @@ export interface WordDTO {
 export interface GroupedWordDefinitions {
   [partOfSpeech: string]: Definition[];
 }
+
+export interface RhymesDTO {
+  word: string;
+  rhymes: { all: string[] };
+}
